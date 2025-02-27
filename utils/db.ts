@@ -4,9 +4,14 @@ export interface Application {
   id?: number;
   name: string;
   address: string;
-  url?: string;
+  images: { url: string; caption: string }[];
+  size: number;
+  netRent: number;
+  totalRent: number;
+  rooms: number;
+  exposeUrl?: string;
   status: 'pending' | 'invited' | 'viewing' | 'accepted' | 'rejected';
-  pdfUrl?: string;
+  exposePdf?: string;
   createdAt: Date;
 }
 
@@ -16,7 +21,7 @@ export class FlatManagerDB extends Dexie {
   constructor() {
     super('FlatManagerDB');
     this.version(1).stores({
-      applications: '++id, name, address, url, status, pdfUrl, createdAt',
+      applications: '++id, name, address, size, netRent, totalRent, rooms, exposeUrl, status, createdAt',
     });
   }
 }

@@ -14,42 +14,61 @@
         </NuxtLink>
       </div>
     </div>
-    <div class="mt-8 flex flex-col">
-      <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-          <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-            <table class="min-w-full divide-y divide-gray-300">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Name</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Address</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">URL</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                    <span class="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200 bg-white">
-                <tr v-for="application in applications" :key="application.id">
-                  <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                    {{ application.name }}
-                  </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ application.address }}</td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    <a :href="application.url" target="_blank" class="text-indigo-600 hover:text-indigo-900">
-                      View Listing
-                    </a>
-                  </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ application.status }}</td>
-                  <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                    <NuxtLink :to="`/applications/${application.id}`" class="text-indigo-600 hover:text-indigo-900">
-                      View
-                    </NuxtLink>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+    <div class="mt-8 space-y-4">
+      <div
+        v-for="application in applications"
+        :key="application.id"
+        class="bg-white shadow sm:rounded-lg overflow-hidden"
+      >
+        <div class="flex">
+          <div class="w-64 h-48 flex-shrink-0">
+            <img
+              :src="application.images?.[0]?.url ?? 'https://picsum.photos/seed/default/800/400'"
+              :alt="application.name"
+              class="w-full h-full object-cover"
+            />
+          </div>
+
+          <div class="flex-1 px-6 py-4">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-semibold text-gray-900">{{ application.name }}</h3>
+              <select
+                v-model="application.status"
+                @change="updateStatus(application)"
+                class="rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              >
+                <option value="pending">Pending</option>
+                <option value="viewing">Viewing</option>
+                <option value="applied">Applied</option>
+                <option value="rejected">Rejected</option>
+                <option value="accepted">Accepted</option>
+              </select>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-4">{{ application.address }}</p>
+
+            <div class="flex items-center justify-between">
+              <div class="space-x-4">
+                <NuxtLink
+                  :to="`/applications/${application.id}`"
+                  class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                >
+                  View Details
+                </NuxtLink>
+                <a
+                  :href="application.exposeUrl"
+                  target="_blank"
+                  class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                >
+                  View Listing →
+                </a>
+              </div>
+
+              <span class="text-xs text-gray-500">
+                {{ new Date(application.createdAt).toLocaleDateString() }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -61,6 +80,16 @@
 import { db, type Application } from '~/utils/db';
 
 const applications = ref<Application[]>([]);
+
+async function updateStatus(application: Application) {
+  try {
+    await db.applications.update(application.id, {
+      status: application.status,
+    });
+  } catch (error) {
+    console.error('Error updating status:', error);
+  }
+}
 
 onMounted(async () => {
   applications.value = await db.applications.toArray();
